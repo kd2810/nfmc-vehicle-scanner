@@ -1,0 +1,113 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NFMC Guardhouse Scanner</title>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #eef5fc;
+      margin: 0;
+      padding: 24px 15px;
+      color: #183c62;
+    }
+    .card {
+      max-width: 460px;
+      margin: auto;
+      background: white;
+      padding: 24px 18px;
+      border-radius: 18px;
+      text-align: center;
+    }
+    h2 { margin-bottom: 5px; }
+    p { color: #64748b; }
+    #reader { width: 100%; margin-top: 18px; }
+    button {
+      width: 100%;
+      padding: 17px;
+      margin-top: 15px;
+      background: #185aa7;
+      border: 0;
+      border-radius: 12px;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    button:disabled { opacity: .5; }
+    #result {
+      margin-top: 20px;
+      padding: 15px;
+      background: #e6f6eb;
+      border-radius: 12px;
+      overflow-wrap: anywhere;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>NFMC GUARDHOUSE</h2>
+    <p>LIVE VEHICLE QR SCANNER</p>
+
+    <div id="reader"></div>
+
+    <button id="start" onclick="startScanner()">
+      START SCANNING
+    </button>
+
+    <p id="message">Tap Start Scanning to open camera.</p>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    let scanner;
+    let detected = false;
+
+    async function startScanner() {
+      const button = document.getElementById('start');
+      const message = document.getElementById('message');
+      const result = document.getElementById('result');
+
+      button.disabled = true;
+      result.style.display = 'none';
+      detected = false;
+      message.textContent = 'Opening camera...';
+
+      try {
+        if (!scanner) scanner = new Html5Qrcode('reader');
+
+        await scanner.start(
+          { facingMode: 'environment' },
+          { fps: 10, qrbox: { width: 230, height: 230 } },
+          async function(decodedText) {
+            if (detected) return;
+            detected = true;
+
+            await scanner.stop();
+
+            message.textContent = 'QR detected successfully!';
+            result.style.display = 'block';
+            result.textContent =
+              'QR DETECTED! Camera scanner is working. ' +
+              'No vehicle movement has been recorded yet.';
+
+            button.textContent = 'SCAN AGAIN';
+            button.disabled = false;
+          },
+          function() {}
+        );
+
+        message.textContent = 'Point camera at a QR code.';
+      } catch (error) {
+        message.textContent =
+          'Camera error: ' + (error.message || error);
+        button.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
